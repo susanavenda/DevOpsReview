@@ -1,0 +1,40 @@
+18:40:47.127 [main] INFO  c.example.demo.DemoApplicationTests - Starting DemoApplicationTests using Java 22.0.1 on Miekes-iMac.local with PID 14456 (started by Susana in /Users/Susana/DevOpsReview/demo)
+18:40:47.127 [main] DEBUG c.example.demo.DemoApplicationTests - Running with Spring Boot v2.5.4, Spring v5.3.9
+18:40:47.129 [main] INFO  c.example.demo.DemoApplicationTests - No active profile set, falling back to default profiles: default
+18:40:47.978 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+18:40:48.010 [main] INFO  c.example.demo.DemoApplicationTests - Started DemoApplicationTests in 1.074 seconds (JVM running for 1.548)
+18:43:25.115 [main] INFO  c.example.demo.DemoApplicationTests - Starting DemoApplicationTests using Java 22.0.1 on Miekes-iMac.local with PID 15093 (started by Susana in /Users/Susana/DevOpsReview/demo)
+18:43:25.116 [main] DEBUG c.example.demo.DemoApplicationTests - Running with Spring Boot v2.5.4, Spring v5.3.9
+18:43:25.117 [main] INFO  c.example.demo.DemoApplicationTests - No active profile set, falling back to default profiles: default
+18:43:25.943 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+18:43:25.965 [main] INFO  c.example.demo.DemoApplicationTests - Started DemoApplicationTests in 1.031 seconds (JVM running for 1.462)
+18:46:57.284 [main] INFO  c.example.demo.DemoApplicationTests - Starting DemoApplicationTests using Java 22.0.1 on Miekes-iMac.local with PID 15960 (started by Susana in /Users/Susana/DevOpsReview/demo)
+18:46:57.287 [main] DEBUG c.example.demo.DemoApplicationTests - Running with Spring Boot v2.5.4, Spring v5.3.9
+18:46:57.294 [main] INFO  c.example.demo.DemoApplicationTests - No active profile set, falling back to default profiles: default
+18:46:58.096 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+18:46:58.120 [main] INFO  c.example.demo.DemoApplicationTests - Started DemoApplicationTests in 1.011 seconds (JVM running for 1.434)
+18:47:22.218 [main] INFO  c.example.demo.DemoApplicationTests - Starting DemoApplicationTests using Java 22.0.1 on Miekes-iMac.local with PID 16094 (started by Susana in /Users/Susana/DevOpsReview/demo)
+18:47:22.219 [main] DEBUG c.example.demo.DemoApplicationTests - Running with Spring Boot v2.5.4, Spring v5.3.9
+18:47:22.220 [main] INFO  c.example.demo.DemoApplicationTests - No active profile set, falling back to default profiles: default
+18:47:22.954 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+18:47:22.977 [main] INFO  c.example.demo.DemoApplicationTests - Started DemoApplicationTests in 0.921 seconds (JVM running for 1.343)
+18:48:38.467 [main] INFO  c.example.demo.DemoApplicationTests - Starting DemoApplicationTests using Java 22.0.1 on Miekes-iMac.local with PID 16405 (started by Susana in /Users/Susana/DevOpsReview/demo)
+18:48:38.467 [main] DEBUG c.example.demo.DemoApplicationTests - Running with Spring Boot v2.5.4, Spring v5.3.9
+18:48:38.469 [main] INFO  c.example.demo.DemoApplicationTests - No active profile set, falling back to default profiles: default
+18:48:39.310 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+18:48:39.334 [main] INFO  c.example.demo.DemoApplicationTests - Started DemoApplicationTests in 1.087 seconds (JVM running for 1.556)
+18:49:12.243 [main] INFO  c.example.demo.DemoApplicationTests - Starting DemoApplicationTests using Java 22.0.1 on Miekes-iMac.local with PID 16576 (started by Susana in /Users/Susana/DevOpsReview/demo)
+18:49:12.243 [main] DEBUG c.example.demo.DemoApplicationTests - Running with Spring Boot v2.5.4, Spring v5.3.9
+18:49:12.244 [main] INFO  c.example.demo.DemoApplicationTests - No active profile set, falling back to default profiles: default
+18:49:12.999 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+18:49:13.024 [main] INFO  c.example.demo.DemoApplicationTests - Started DemoApplicationTests in 0.967 seconds (JVM running for 1.508)
+18:49:19.236 [main] INFO  c.example.demo.DemoApplicationTests - Starting DemoApplicationTests using Java 22.0.1 on Miekes-iMac.local with PID 16633 (started by Susana in /Users/Susana/DevOpsReview/demo)
+18:49:19.237 [main] DEBUG c.example.demo.DemoApplicationTests - Running with Spring Boot v2.5.4, Spring v5.3.9
+18:49:19.237 [main] INFO  c.example.demo.DemoApplicationTests - No active profile set, falling back to default profiles: default
+18:49:20.040 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+18:49:20.068 [main] INFO  c.example.demo.DemoApplicationTests - Started DemoApplicationTests in 0.996 seconds (JVM running for 1.423)
+18:55:45.188 [main] INFO  c.example.demo.DemoApplicationTests - Starting DemoApplicationTests using Java 22.0.1 on Miekes-iMac.local with PID 18086 (started by Susana in /Users/Susana/DevOpsReview/demo)
+18:55:45.188 [main] DEBUG c.example.demo.DemoApplicationTests - Running with Spring Boot v2.5.4, Spring v5.3.9
+18:55:45.189 [main] INFO  c.example.demo.DemoApplicationTests - No active profile set, falling back to default profiles: default
+18:55:46.071 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 2 endpoint(s) beneath base path '/actuator'
+18:55:46.095 [main] INFO  c.example.demo.DemoApplicationTests - Started DemoApplicationTests in 1.132 seconds (JVM running for 2.444)
