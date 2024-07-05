@@ -18,7 +18,7 @@ jobs:
       - name: Set up JDK 11
         uses: actions/setup-java@v2
         with:
-          java-version: '11':
+          java-version: '11'
 
       - name: Build with Maven
         run: mvn clean package -DskipTests
@@ -49,13 +49,33 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Log in to Docker Hub
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image
+      - name: Set up QEMU
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image
+        run: docker buildx build --platform linux/amd64 -t ${{ secrets.DOCKER_USERNAME }}/demo:${{ github.sha }} .
+
+      - name: Sign Docker image
+        env:
+          DOCKER_CONTENT_TRUST: 1
+          DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE: ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE }}
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/demo:${{ github.sha }} .
+          echo ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE }} | docker trust sign ${{ secrets.DOCKER_USERNAME }}/demo:${{ github.sha }}
+          echo ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE }} | docker trust sign ${{ secrets.DOCKER_USERNAME }}/demo:latest
+
+      - name: Push Docker image
+        run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/demo:${{ github.sha }}
           docker tag ${{ secrets.DOCKER_USERNAME }}/demo:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/demo:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/demo:latest
+
+      - name: Verify Docker image
+        run: docker trust inspect --pretty ${{ secrets.DOCKER_USERNAME }}/demo:latest
