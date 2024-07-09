@@ -1,0 +1,7 @@
+replicaCount: 1
+image:
+  repository: my-spring-boot-app
+  tag: latest
+service:
+  type: ClusterIP
+  port: 80

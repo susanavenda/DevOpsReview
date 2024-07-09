@@ -1,0 +1,3 @@
+apiVersion: v2
+name: my-spring-boot-app
+version: 0.1.0

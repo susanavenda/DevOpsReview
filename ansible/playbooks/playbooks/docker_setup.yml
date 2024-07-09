@@ -1,0 +1,4 @@
+- name: Configure Docker
+  hosts: k8s_nodes
+  roles:
+    - docker
