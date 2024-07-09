@@ -1,0 +1,12 @@
+- name: Install Docker
+  apt:
+    name: docker.io
+    state: present
+
+- name: Configure Docker Daemon
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    mode: '0644'
+  notify:
+    - Restart Docker
