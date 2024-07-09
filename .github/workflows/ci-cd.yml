@@ -19,9 +19,11 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: '11'
+          distribution: 'temurin'
 
       - name: Build with Maven
         run: mvn clean package -DskipTests
+        working-directory: demo
 
   test:
     name: Test
@@ -35,47 +37,168 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: '11'
+          distribution: 'temurin'
 
       - name: Run tests with Maven
         run: mvn test
+        working-directory: demo
 
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
     needs: build
 
+    environment: DEV  # Specify the environment to use
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Install Notary
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y expect
+          wget https://github.com/theupdateframework/notary/releases/download/v0.6.1/notary-Linux-amd64
+          chmod +x notary-Linux-amd64
+          sudo mv notary-Linux-amd64 /usr/local/bin/notary
+
+      - name: Set up Notary Keys
+        run: |
+          DOCKER_CONFIG=$HOME/.docker-config
+          mkdir -p $DOCKER_CONFIG/trust/private
+          echo "${{ secrets.NOTARY_ROOT_KEY }}" | base64 -d > $DOCKER_CONFIG/trust/private/root_key.pem
+          echo "${{ secrets.NOTARY_TARGETS_KEY }}" | base64 -d > $DOCKER_CONFIG/trust/private/targets_key.pem
+          echo "${{ secrets.NOTARY_SNAPSHOT_KEY }}" | base64 -d > $DOCKER_CONFIG/trust/private/snapshot_key.pem
+          chmod 600 $DOCKER_CONFIG/trust/private/root_key.pem
+          chmod 600 $DOCKER_CONFIG/trust/private/targets_key.pem
+          chmod 600 $DOCKER_CONFIG/trust/private/snapshot_key.pem
+
+      - name: Import Notary Keys with Expect
+        env:
+          NOTARY_ROOT_KEY_PASSPHRASE: ${{ secrets.NOTARY_ROOT_KEY_PASSPHRASE }}
+          NOTARY_TARGETS_KEY_PASSPHRASE: ${{ secrets.NOTARY_TARGETS_KEY_PASSPHRASE }}
+          NOTARY_SNAPSHOT_KEY_PASSPHRASE: ${{ secrets.NOTARY_SNAPSHOT_KEY_PASSPHRASE }}
+        run: |
+          DOCKER_CONFIG=$HOME/.docker-config
+          GUN=docker.io/${{ secrets.DOCKER_USERNAME }}/demo
+          expect << EOF
+          spawn notary key import $DOCKER_CONFIG/trust/private/root_key.pem --role root --gun $GUN
+          expect "Enter passphrase for new root key with ID"
+          send "$NOTARY_ROOT_KEY_PASSPHRASE\r"
+          expect "Repeat passphrase for new root key with ID"
+          send "$NOTARY_ROOT_KEY_PASSPHRASE\r"
+          expect eof
+          EOF
+          expect << EOF
+          spawn notary key import $DOCKER_CONFIG/trust/private/targets_key.pem --role targets --gun $GUN
+          expect "Enter passphrase for new targets key with ID"
+          send "$NOTARY_TARGETS_KEY_PASSPHRASE\r"
+          expect "Repeat passphrase for new targets key with ID"
+          send "$NOTARY_TARGETS_KEY_PASSPHRASE\r"
+          expect eof
+          EOF
+          expect << EOF
+          spawn notary key import $DOCKER_CONFIG/trust/private/snapshot_key.pem --role snapshot --gun $GUN
+          expect "Enter passphrase for new snapshot key with ID"
+          send "$NOTARY_SNAPSHOT_KEY_PASSPHRASE\r"
+          expect "Repeat passphrase for new snapshot key with ID"
+          send "$NOTARY_SNAPSHOT_KEY_PASSPHRASE\r"
+          expect eof
+          EOF
+
+      - name: Debug Key Setup
+        run: |
+          DOCKER_CONFIG=$HOME/.docker-config
+          echo "Listing key directory contents:"
+          ls -l $DOCKER_CONFIG/trust/private/
+          echo "Displaying key file contents (showing first 10 lines of each file):"
+          head -n 10 $DOCKER_CONFIG/trust/private/root_key.pem
+          head -n 10 $DOCKER_CONFIG/trust/private/targets_key.pem
+          head -n 10 $DOCKER_CONFIG/trust/private/snapshot_key.pem
+
+      - name: Print Environment Variables
+        run: |
+          echo "NOTARY_ROOT_KEY_PASSPHRASE: ${{ secrets.NOTARY_ROOT_KEY_PASSPHRASE }}"
+          echo "NOTARY_TARGETS_KEY_PASSPHRASE: ${{ secrets.NOTARY_TARGETS_KEY_PASSPHRASE }}"
+          echo "NOTARY_SNAPSHOT_KEY_PASSPHRASE: ${{ secrets.NOTARY_SNAPSHOT_KEY_PASSPHRASE }}"
+          echo "NOTARY_DELEGATION_KEY_PASSPHRASE: ${{ secrets.NOTARY_DELEGATION_KEY_PASSPHRASE }}"
+
+      - name: Export Environment Variables and Verify Signing Keys
+        env:
+          NOTARY_ROOT_PASSPHRASE: ${{ secrets.NOTARY_ROOT_KEY_PASSPHRASE }}
+          NOTARY_TARGETS_PASSPHRASE: ${{ secrets.NOTARY_TARGETS_KEY_PASSPHRASE }}
+          NOTARY_SNAPSHOT_PASSPHRASE: ${{ secrets.NOTARY_SNAPSHOT_KEY_PASSPHRASE }}
+          NOTARY_DELEGATION_PASSPHRASE: ${{ secrets.NOTARY_DELEGATION_KEY_PASSPHRASE }}
+        run: |
+          export DOCKER_CONFIG=$HOME/.docker-config
+          echo "Verifying available signing keys..."
+          notary key list
+
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Verify Docker Login
+        run: docker info
 
       - name: Set up QEMU
-        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
-        run: docker buildx build --platform linux/amd64 -t ${{ secrets.DOCKER_USERNAME }}/demo:${{ github.sha }} .
-
-      - name: Sign Docker image
-        env:
-          DOCKER_CONTENT_TRUST: 1
-          DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE: ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE }}
+      - name: Build and push the image
         run: |
-          echo ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE }} | docker trust sign ${{ secrets.DOCKER_USERNAME }}/demo:${{ github.sha }}
-          echo ${{ secrets.DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE }} | docker trust sign ${{ secrets.DOCKER_USERNAME }}/demo:latest
-
-      - name: Push Docker image
-        run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/demo:${{ github.sha }}
+          docker buildx build --platform linux/amd64 --load -t ${{ secrets.DOCKER_USERNAME }}/demo:${{ github.sha }} demo
           docker tag ${{ secrets.DOCKER_USERNAME }}/demo:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/demo:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/demo:${{ github.sha }}
           docker push ${{ secrets.DOCKER_USERNAME }}/demo:latest
+          docker tag ${{ secrets.DOCKER_USERNAME }}/demo:${{ github.sha }} ${{ secrets.DOCKER_USERNAME }}/demo:myfirstimagepush
+          docker push ${{ secrets.DOCKER_USERNAME }}/demo:myfirstimagepush
 
       - name: Verify Docker image
+        run: docker trust inspect --pretty ${{ secrets.DOCKER_USERNAME }}/demo:latest
+
+      - name: Debug Docker Push
+        run: |
+          echo "Attempting to push the image with detailed logging:"
+          docker push ${{ secrets.DOCKER_USERNAME }}/demo:${{ github.sha }} || true
+          docker push ${{ secrets.DOCKER_USERNAME }}/demo:myfirstimagepush || true
+          docker push ${{ secrets.DOCKER_USERNAME }}/demo:latest || true
+
+      - name: Print Docker Images
+        run: docker images
+
+      - name: Sign the docker image
+        uses: sudo-bot/action-docker-sign@latest
+        with:
+          image-ref: "docker.io/${{ secrets.DOCKER_USERNAME }}/demo:${{ github.sha }}"
+          private-key-id: "${{ secrets.DOCKER_TARGETS_KEY_ID }}"
+          private-key: ${{ secrets.DOCKER_TARGETS_KEY }}
+          private-key-passphrase: ${{ secrets.DOCKER_TARGETS_KEY_PASSPHRASE }}
+
+      # Ensure the private key is in the correct format
+      - name: Prepare Private Key
+        run: |
+          mkdir -p ~/.docker/trust/private/
+          echo "${{ secrets.DOCKER_TARGETS_KEY }}" > ~/.docker/trust/private/targets_key.pem
+          chmod 600 ~/.docker/trust/private/targets_key.pem
+      
+      # Load the private key
+      - name: Load Docker Trust Key
+        run: docker trust key load ~/.docker/trust/private/targets_key.pem
+        env:
+          DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE: ${{ secrets.DOCKER_TARGETS_KEY_PASSPHRASE }}
+
+      - name: Sign the manifest
+        uses: sudo-bot/action-docker-sign@latest
+        with:
+          image-ref: "docker.io/${{ secrets.DOCKER_USERNAME }}/demo:latest"
+          sign-manifest: true
+          private-key-id: "${{ secrets.DOCKER_TARGETS_KEY_ID }}"
+          private-key-name: "releases"  # Will be used for targets/releases
+          private-key: ${{ secrets.DOCKER_TARGETS_KEY }}
+          private-key-passphrase: ${{ secrets.DOCKER_TARGETS_KEY_PASSPHRASE }}
+          notary-auth: "${{ secrets.DOCKER_USERNAME }}:${{ secrets.DOCKER_PASSWORD }}"
+
+      - name: Final Verification
         run: docker trust inspect --pretty ${{ secrets.DOCKER_USERNAME }}/demo:latest
